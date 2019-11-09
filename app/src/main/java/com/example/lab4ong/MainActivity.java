@@ -1,15 +1,23 @@
 package com.example.lab4ong;
 
-import android.content.DialogInterface;
-import android.os.Bundle;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
-import android.widget.Toast;
-
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.DialogInterface;
+import android.os.Bundle;
+import android.os.Environment;
+import android.view.View;
+import android.widget.Adapter;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
@@ -56,19 +64,51 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, final int i, long id) {
-        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-        dialog.setIcon(logo[i]);
-        dialog.setTitle(verNames[i]);
-        dialog.setMessage(info[i]);
-        dialog.setNeutralButton("Close", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-                Toast.makeText(MainActivity.this, verNames[i], Toast.LENGTH_LONG).show();
-            }
-        });
-        dialog.create().show();
+        final File folder = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+        File file = new File(folder, "bank.txt");
+        File read = new File(folder, "show.txt");
+        try {
+            final FileOutputStream fos = new FileOutputStream(file);
+            final FileOutputStream show = new FileOutputStream(read);
+            final AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+            String choice = versions.get(i).getName() + "\n"
+                    + versions.get(i).getrCountry() + "\n"
+                    + versions.get(i).getrIndustry() + "\n"
+                    + versions.get(i).getrCEO() + "\n";
+            String sChoice = versions.get(i).getName() + "\n" + versions.get(i).getrCountry() + "\n" + versions.get(i).getrIndustry()
+                    + "\n" + versions.get(i).getrCEO();
+            show.write(sChoice.getBytes());
+            fos.write(choice.getBytes());
+            dialog.setTitle(versions.get(i).getName());
+            dialog.setIcon(versions.get(i).getLogo());
+
+            dialog.setMessage(info[i]);
+
+            dialog.setNeutralButton("CLOSE", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                    try {
+                        FileInputStream fin;
+                        fin = new FileInputStream(new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/show.txt"));
+                        int i;
+                        String str = "";
+                        while ((i = fin.read()) != -1) {
+                            str += Character.toString((char) i);
+                        }
+                        fin.close();
+                        Toast.makeText(MainActivity.this, str, Toast.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
+            dialog.create().show();
+        } catch (FileNotFoundException e) {
+            Toast.makeText(this, "File not found.", Toast.LENGTH_LONG ).show();
+        } catch (IOException e) {
+            Toast.makeText(this, "Unable to write", Toast.LENGTH_SHORT).show();
+        }
+
     }
 }
-
-
